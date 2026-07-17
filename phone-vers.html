@@ -782,6 +782,47 @@
     .xp-window .btn-max {
       opacity: 0.55;
     }
+
+    /* ==========================================================
+       MUSIC PLAYER — mobile-only layout fix
+       Controls row (play/prev/next, seek slider, time, loop) and
+       the volume row were overflowing off the right edge on small
+       screens. Let them wrap instead of forcing everything into
+       one line.
+       ========================================================== */
+    .mp-controls {
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .mp-seek {
+      flex: 1;
+      min-width: 120px;
+      /* Drop the slider onto its own full-width row so the
+         buttons, time, and loop control aren't squeezed out. */
+      order: 1;
+      flex-basis: 100%;
+    }
+
+    .mp-time {
+      order: 2;
+      flex-shrink: 0;
+    }
+
+    .mp-btn.mp-loop-btn {
+      order: 3;
+      flex-shrink: 0;
+    }
+
+    .mp-volume-row {
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .mp-volume {
+      flex: 1;
+      min-width: 120px;
+    }
   }
 </style>
 </head>
