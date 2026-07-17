@@ -751,8 +751,17 @@
       z-index: 0;
     }
 
-    #mobile-placeholder .mp-placeholder-text {
-      font-family: Tahoma, Verdana, Arial, sans-serif;
+    #mobile-placeholder .mp-cover {
+      width: 56px;
+      height: 56px;
+      background: #eef3fb;
+      border: 1px solid #cddaee;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      color: #6f89ad;
     }
 
     /* Windows fill the whole right pane instead of floating */
@@ -796,7 +805,8 @@
   <div id="windows-container">
     <!-- Shown only on mobile, only when no app is currently open -->
     <div id="mobile-placeholder">
-      <div class="mp-placeholder-text">Tap an icon on the left to open it here.</div>
+      <div class="mp-cover">&#128187;</div>
+      <div>Tap an icon on the left to open it here.</div>
     </div>
   </div>
 
