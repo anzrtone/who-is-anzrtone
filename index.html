@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>who is anzar?</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
   /* ============================================================
@@ -14,14 +14,9 @@
     padding: 0;
     height: 100%;
     overflow: hidden;
-    overscroll-behavior: none;
     font-family: Tahoma, Verdana, Arial, sans-serif;
     -webkit-user-select: none;
     user-select: none;
-  }
-
-  * {
-    box-sizing: border-box;
   }
 
   #desktop {
@@ -42,12 +37,8 @@
     position: absolute;
     top: 20px;
     left: 20px;
-    right: 20px;
-    bottom: 60px;
     display: flex;
     flex-direction: column;
-    flex-wrap: wrap;
-    align-content: flex-start;
     gap: 22px;
     z-index: 1;
   }
@@ -58,7 +49,6 @@
     cursor: pointer;
     padding: 6px 4px;
     border-radius: 4px;
-    touch-action: manipulation;
   }
 
   .desktop-icon:hover,
@@ -124,7 +114,6 @@
     height: 26px;
     box-sizing: border-box;
     text-shadow: 1px 1px 1px rgba(0,0,0,0.4);
-    touch-action: none;
   }
 
   .xp-titlebar .title-left {
@@ -194,14 +183,10 @@
     flex: 1;
     padding: 14px 16px;
     overflow-y: auto;
-    overflow-x: hidden;
     font-size: 14px;
     line-height: 1.6;
     color: #1a1a1a;
     white-space: pre-wrap;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    word-break: break-word;
     background: #ffffff;
     font-family: 'Consolas', 'Lucida Console', 'Courier New', monospace;
   }
@@ -549,7 +534,6 @@
     bottom: 0;
     cursor: nwse-resize;
     background: transparent;
-    touch-action: none;
   }
 
   /* ============================================================
@@ -688,130 +672,6 @@
   .start-menu-item img {
     width: 20px;
     height: 20px;
-  }
-
-  /* ============================================================
-     MOBILE / SMALL-SCREEN RESPONSIVENESS
-     ============================================================ */
-  @media (max-width: 768px) {
-
-    /* Desktop icons: capped-height column that wraps into new
-       columns instead of running off the bottom or getting cut
-       off the right edge of the screen. */
-    #icon-column {
-      top: 14px;
-      left: 14px;
-      right: 14px;
-      bottom: 56px;
-      gap: 16px;
-    }
-
-    .desktop-icon {
-      width: 72px;
-    }
-
-    .desktop-icon img {
-      width: 42px;
-      height: 42px;
-    }
-
-    .desktop-icon .icon-label {
-      font-size: 11px;
-    }
-
-    /* Windows: smaller minimum footprint so they can shrink to
-       fit narrow phone screens (actual sizing/position on open
-       is handled in JS, this just relaxes the floor). */
-    .xp-window {
-      min-width: 240px;
-      min-height: 160px;
-      border-radius: 6px 6px 3px 3px;
-    }
-
-    .xp-titlebar {
-      height: 32px;
-      padding: 6px 6px 6px 8px;
-      font-size: 13px;
-    }
-
-    .win-btn {
-      width: 26px;
-      height: 24px;
-    }
-
-    /* Notepad-style windows: scale text down and kill any chance
-       of horizontal scrolling on narrow viewports. */
-    .xp-window-body {
-      padding: 10px 12px;
-      font-size: 13px;
-      line-height: 1.5;
-    }
-
-    .notepad-menubar {
-      padding: 5px 8px;
-      font-size: 12px;
-      gap: 10px;
-      overflow-x: auto;
-    }
-
-    /* Resize-by-corner is fiddly with a finger and the window is
-       already auto-fit to the screen, so hide it on mobile. */
-    .resize-handle {
-      display: none;
-    }
-
-    #taskbar {
-      height: 44px;
-    }
-
-    #start-button {
-      padding: 0 12px 0 10px;
-      font-size: 14px;
-    }
-
-    .taskbar-task {
-      max-width: 110px;
-      font-size: 11px;
-      padding: 4px 8px;
-    }
-
-    #system-tray {
-      padding: 0 10px;
-      font-size: 11px;
-    }
-
-    #start-menu {
-      width: 200px;
-      bottom: 44px;
-    }
-  }
-
-  @media (max-width: 400px) {
-    .desktop-icon {
-      width: 62px;
-    }
-
-    .desktop-icon img {
-      width: 38px;
-      height: 38px;
-    }
-
-    .desktop-icon .icon-label {
-      font-size: 10px;
-    }
-
-    .xp-window-body {
-      font-size: 12px;
-    }
-
-    .taskbar-task span {
-      display: none; /* icon-only taskbar buttons on very small phones */
-    }
-
-    .taskbar-task {
-      max-width: 36px;
-      padding: 4px 8px;
-    }
   }
 </style>
 </head>
@@ -1007,25 +867,15 @@ APPS.forEach((app, index) => {
   });
   iconEl.addEventListener('dblclick', () => openWindow(app.id));
 
-  // Touch support: on mobile, double-tapping precisely is fiddly, so a
-  // single tap both selects and opens the app right away. On larger
-  // touch devices (tablets treated like desktop width) we fall back to
-  // the same double-tap detection as before.
+  // Touch support: two taps quickly = open (basic double-tap detection)
   let lastTap = 0;
   iconEl.addEventListener('touchend', (e) => {
-    if (isMobileView()) {
-      e.preventDefault();
-      document.querySelectorAll('.desktop-icon').forEach(el => el.classList.remove('selected'));
-      iconEl.classList.add('selected');
-      openWindow(app.id);
-      return;
-    }
     const now = Date.now();
     if (now - lastTap < 400) {
       openWindow(app.id);
     }
     lastTap = now;
-  }, { passive: false });
+  });
 
   // Window
   const winEl = document.createElement('div');
@@ -1077,70 +927,15 @@ APPS.forEach((app, index) => {
   setupWindow(winEl, app);
 });
 
-// ---- Mobile helpers ----
-const MOBILE_BREAKPOINT = 768;
-const TASKBAR_HEIGHT = 44;
-const SCREEN_MARGIN = 8;
-
-function isMobileView() {
-  return window.innerWidth <= MOBILE_BREAKPOINT;
-}
-
-// Scales & centers a window so it fits cleanly within the current
-// viewport on phones/small screens, instead of overflowing the
-// horizontal edge. Only kicks in below the mobile breakpoint —
-// desktop sizing/position (set from the APPS array) is untouched.
-// Scales & centers a window so it fits cleanly within the current
-// viewport on phones/small screens.
-function fitWindowToScreen(winEl, app) {
-  if (!isMobileView()) return;
-
-  const maxW = window.innerWidth - SCREEN_MARGIN * 2;
-  const maxH = window.innerHeight - TASKBAR_HEIGHT - SCREEN_MARGIN * 2;
-
-  let scale = Math.min(1, maxW / app.width, maxH / app.height);
-
-  let targetW = Math.round(app.width * scale);
-  let targetH = Math.round(app.height * scale);
-
-  // Apply CSS minimums dynamically so JS matches CSS
-  const minW = 240;
-  const minH = 160;
-  if (targetW < minW) targetW = minW;
-  if (targetH < minH) targetH = minH;
-
-  // Ensure it doesn't exceed screen dimensions even with min-width applied
-  if (targetW > maxW) targetW = maxW;
-  if (targetH > maxH) targetH = maxH;
-
-  winEl.style.width = targetW + 'px';
-  winEl.style.height = targetH + 'px';
-  winEl.style.left = Math.max(SCREEN_MARGIN, Math.round((window.innerWidth - targetW) / 2)) + 'px';
-  winEl.style.top = Math.max(SCREEN_MARGIN, Math.round((window.innerHeight - TASKBAR_HEIGHT - targetH) / 2)) + 'px';
-}
-
-// Re-fit any currently open (and not maximized) windows when the
-// viewport changes size, e.g. a phone rotating orientation.
-window.addEventListener('resize', () => {
-  document.querySelectorAll('.xp-window.open').forEach(winEl => {
-    if (winEl.dataset.maximized === 'true') return;
-    const appId = winEl.id.replace('window-', '');
-    const app = APPS.find(a => a.id === appId);
-    if (app) fitWindowToScreen(winEl, app);
-  });
-});
-
 // ---- Open / close / focus logic ----
 function openWindow(appId) {
   const winEl = document.getElementById('window-' + appId);
   if (!winEl) return;
-  const app = APPS.find(a => a.id === appId);
   winEl.classList.add('open');
   winEl.style.transition = 'none';
   winEl.style.transform = 'translate(0,0) scale(1)';
   winEl.style.opacity = '1';
   winStates[appId].minimized = false;
-  fitWindowToScreen(winEl, app);
   bringToFront(winEl);
   addTaskbarEntry(appId);
 }
@@ -1324,14 +1119,12 @@ function setupWindow(winEl, app) {
       winEl.style.width = '100%';
       winEl.style.height = 'calc(100% - 40px)';
       isMaximized = true;
-      winEl.dataset.maximized = 'true';
     } else {
       winEl.style.top = prevStyle.top;
       winEl.style.left = prevStyle.left;
       winEl.style.width = prevStyle.width;
       winEl.style.height = prevStyle.height;
       isMaximized = false;
-      winEl.dataset.maximized = 'false';
     }
   });
 
@@ -1352,25 +1145,11 @@ function setupWindow(winEl, app) {
     if (!isDragging) return;
     let newLeft = clientX - dragOffsetX;
     let newTop = clientY - dragOffsetY;
-
-    // Keep at least a sliver of the titlebar reachable on every edge,
-    // so a window (especially on a small phone screen) can never be
-    // dragged fully off-screen and become unrecoverable.
-    const winW = winEl.offsetWidth;
-    const winH = winEl.offsetHeight;
-    const visibleMargin = 40;
-    const minLeft = visibleMargin - winW;
-    const maxLeft = window.innerWidth - visibleMargin;
-    const minTop = 0;
-    const maxTop = window.innerHeight - TASKBAR_HEIGHT - visibleMargin;
-
-    if (newLeft < minLeft) newLeft = minLeft;
-    if (newLeft > maxLeft) newLeft = maxLeft;
-    if (newTop < minTop) newTop = minTop;
-    if (newTop > maxTop) newTop = maxTop;
-
+    // keep window from being dragged above the top of the screen
+    if (newTop < 0) newTop = 0;
     winEl.style.left = newLeft + 'px';
     winEl.style.top = newTop + 'px';
+    winEl.style.width = winEl.style.width; // no-op, keeps size stable
   }
 
   function endDrag() {
@@ -1387,16 +1166,13 @@ function setupWindow(winEl, app) {
   titlebar.addEventListener('touchstart', (e) => {
     const touch = e.touches[0];
     startDrag(touch.clientX, touch.clientY);
-    e.preventDefault();
-  }, { passive: false });
+  });
   document.addEventListener('touchmove', (e) => {
     if (isDragging && e.touches[0]) {
       doDrag(e.touches[0].clientX, e.touches[0].clientY);
-      e.preventDefault();
     }
-  }, { passive: false });
+  });
   document.addEventListener('touchend', endDrag);
-  document.addEventListener('touchcancel', endDrag);
 
   // ---- Resizing (bottom-right corner) ----
   let isResizing = false;
@@ -1414,144 +1190,14 @@ function setupWindow(winEl, app) {
 
   document.addEventListener('mousemove', (e) => {
     if (!isResizing) return;
-    const minW = isMobileView() ? 240 : 320;
-    const minH = isMobileView() ? 160 : 200;
-    const newW = Math.max(minW, startW + (e.clientX - startX));
-    const newH = Math.max(minH, startH + (e.clientY - startY));
+    const newW = Math.max(280, startW + (e.clientX - startX));
+    const newH = Math.max(180, startH + (e.clientY - startY));
     winEl.style.width = newW + 'px';
     winEl.style.height = newH + 'px';
   });
 
   document.addEventListener('mouseup', () => { isResizing = false; });
-
-  resizeHandle.addEventListener('touchstart', (e) => {
-    const touch = e.touches[0];
-    isResizing = true;
-    startW = winEl.offsetWidth;
-    startH = winEl.offsetHeight;
-    startX = touch.clientX;
-    startY = touch.clientY;
-    e.stopPropagation();
-    e.preventDefault();
-  }, { passive: false });
-
-  document.addEventListener('touchmove', (e) => {
-    if (!isResizing || !e.touches[0]) return;
-    const touch = e.touches[0];
-    const minW = isMobileView() ? 240 : 320;
-    const minH = isMobileView() ? 160 : 200;
-    const newW = Math.max(minW, startW + (touch.clientX - startX));
-    const newH = Math.max(minH, startH + (touch.clientY - startY));
-    winEl.style.width = newW + 'px';
-    winEl.style.height = newH + 'px';
-    e.preventDefault();
-  }, { passive: false });
-
-  document.addEventListener('touchend', () => { isResizing = false; });
-  document.addEventListener('touchcancel', () => { isResizing = false; });
-
-  // ---- Pinch-to-resize (two-finger touch gesture) ----
-  let isPinching = false;
-  let pinchStartDist = 0;
-  let pinchStartW = 0, pinchStartH = 0;
-  let pinchCenterX = 0, pinchCenterY = 0;
-
-  function touchDistance(t1, t2) {
-    return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
-  }
-
-  function startPinch(touches) {
-    isDragging = false;
-    isResizing = false;
-    isPinching = true;
-
-    pinchStartDist = touchDistance(touches[0], touches[1]);
-    pinchStartW = winEl.offsetWidth;
-    pinchStartH = winEl.offsetHeight;
-
-    const rect = winEl.getBoundingClientRect();
-    pinchCenterX = rect.left + rect.width / 2;
-    pinchCenterY = rect.top + rect.height / 2;
-
-    bringToFront(winEl);
-  }
-
-  function doPinch(touches) {
-    if (!isPinching || pinchStartDist <= 0) return;
-
-    const newDist = touchDistance(touches[0], touches[1]);
-    let scale = newDist / pinchStartDist;
-
-    // Use dynamic minimums based on device type
-    const currentMinW = isMobileView() ? 240 : 320;
-    const currentMinH = isMobileView() ? 160 : 200;
-    
-    const maxW = window.innerWidth - SCREEN_MARGIN * 2;
-    const maxH = window.innerHeight - TASKBAR_HEIGHT - SCREEN_MARGIN * 2;
-
-    const maxAllowedScale = Math.min(maxW / pinchStartW, maxH / pinchStartH);
-    const minAllowedScale = Math.max(currentMinW / pinchStartW, currentMinH / pinchStartH);
-
-    // Safely clamp the scale to avoid conflicts on extremely narrow screens
-    if (minAllowedScale > maxAllowedScale) {
-      scale = maxAllowedScale; 
-    } else {
-      scale = Math.min(Math.max(scale, minAllowedScale), maxAllowedScale);
-    }
-
-    const newW = pinchStartW * scale;
-    const newH = pinchStartH * scale;
-
-    let newLeft = pinchCenterX - newW / 2;
-    let newTop = pinchCenterY - newH / 2;
-
-    // Strict boundary clamping for all edges (Top, Bottom, Left, Right)
-    if (newLeft < SCREEN_MARGIN) newLeft = SCREEN_MARGIN;
-    if (newLeft + newW > window.innerWidth - SCREEN_MARGIN) newLeft = window.innerWidth - SCREEN_MARGIN - newW;
-
-    if (newTop < SCREEN_MARGIN) newTop = SCREEN_MARGIN;
-    if (newTop + newH > window.innerHeight - TASKBAR_HEIGHT - SCREEN_MARGIN) newTop = window.innerHeight - TASKBAR_HEIGHT - SCREEN_MARGIN - newH;
-
-    winEl.style.width = newW + 'px';
-    winEl.style.height = newH + 'px';
-    winEl.style.left = newLeft + 'px';
-    winEl.style.top = newTop + 'px';
-  }
-
-  function endPinch() {
-    isPinching = false;
-    pinchStartDist = 0;
-  }
-
-  // Allow pinch if both fingers start directly on the window
-  winEl.addEventListener('touchstart', (e) => {
-    if (e.touches.length === 2) {
-      startPinch(e.touches);
-      e.preventDefault();
-    }
-  }, { passive: false });
-
-  // Catch pinch if one finger is on the window and the second lands on the desktop
-  document.addEventListener('touchstart', (e) => {
-    if (!isPinching && e.touches.length === 2) {
-      if (winEl.contains(e.touches[0].target) || winEl.contains(e.touches[1].target)) {
-        startPinch(e.touches);
-      }
-    }
-  }, { passive: false });
-
-  document.addEventListener('touchmove', (e) => {
-    if (isPinching && e.touches.length === 2) {
-      doPinch(e.touches);
-      e.preventDefault();
-    }
-  }, { passive: false });
-
-  document.addEventListener('touchend', (e) => {
-    if (isPinching && e.touches.length < 2) endPinch();
-  });
-  
-  document.addEventListener('touchcancel', () => { endPinch(); });
+}
 
 // ---- Media Player (Music app) ----
 
