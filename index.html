@@ -1090,20 +1090,28 @@ function isMobileView() {
 // viewport on phones/small screens, instead of overflowing the
 // horizontal edge. Only kicks in below the mobile breakpoint —
 // desktop sizing/position (set from the APPS array) is untouched.
+// Scales & centers a window so it fits cleanly within the current
+// viewport on phones/small screens.
 function fitWindowToScreen(winEl, app) {
   if (!isMobileView()) return;
 
   const maxW = window.innerWidth - SCREEN_MARGIN * 2;
   const maxH = window.innerHeight - TASKBAR_HEIGHT - SCREEN_MARGIN * 2;
 
-  // Scale both dimensions by the same factor so the window keeps its
-  // original desktop width:height ratio instead of being independently
-  // squashed on one axis. Never scale up past the desktop size (scale
-  // is capped at 1) — only shrink to fit when the viewport is smaller.
-  const scale = Math.min(1, maxW / app.width, maxH / app.height);
+  let scale = Math.min(1, maxW / app.width, maxH / app.height);
 
-  const targetW = Math.round(app.width * scale);
-  const targetH = Math.round(app.height * scale);
+  let targetW = Math.round(app.width * scale);
+  let targetH = Math.round(app.height * scale);
+
+  // Apply CSS minimums dynamically so JS matches CSS
+  const minW = 240;
+  const minH = 160;
+  if (targetW < minW) targetW = minW;
+  if (targetH < minH) targetH = minH;
+
+  // Ensure it doesn't exceed screen dimensions even with min-width applied
+  if (targetW > maxW) targetW = maxW;
+  if (targetH > maxH) targetH = maxH;
 
   winEl.style.width = targetW + 'px';
   winEl.style.height = targetH + 'px';
@@ -1406,8 +1414,10 @@ function setupWindow(winEl, app) {
 
   document.addEventListener('mousemove', (e) => {
     if (!isResizing) return;
-    const newW = Math.max(280, startW + (e.clientX - startX));
-    const newH = Math.max(180, startH + (e.clientY - startY));
+    const minW = isMobileView() ? 240 : 320;
+    const minH = isMobileView() ? 160 : 200;
+    const newW = Math.max(minW, startW + (e.clientX - startX));
+    const newH = Math.max(minH, startH + (e.clientY - startY));
     winEl.style.width = newW + 'px';
     winEl.style.height = newH + 'px';
   });
@@ -1428,8 +1438,10 @@ function setupWindow(winEl, app) {
   document.addEventListener('touchmove', (e) => {
     if (!isResizing || !e.touches[0]) return;
     const touch = e.touches[0];
-    const newW = Math.max(280, startW + (touch.clientX - startX));
-    const newH = Math.max(180, startH + (touch.clientY - startY));
+    const minW = isMobileView() ? 240 : 320;
+    const minH = isMobileView() ? 160 : 200;
+    const newW = Math.max(minW, startW + (touch.clientX - startX));
+    const newH = Math.max(minH, startH + (touch.clientY - startY));
     winEl.style.width = newW + 'px';
     winEl.style.height = newH + 'px';
     e.preventDefault();
@@ -1439,11 +1451,6 @@ function setupWindow(winEl, app) {
   document.addEventListener('touchcancel', () => { isResizing = false; });
 
   // ---- Pinch-to-resize (two-finger touch gesture) ----
-  // Lets a mobile user place two fingers anywhere on the window and
-  // pinch in/out to shrink/grow it. Coexists with single-finger
-  // dragging by taking over (and disabling drag/corner-resize) the
-  // moment a second finger touches down, and cleanly handing control
-  // back once fewer than two fingers remain.
   let isPinching = false;
   let pinchStartDist = 0;
   let pinchStartW = 0, pinchStartH = 0;
@@ -1454,9 +1461,6 @@ function setupWindow(winEl, app) {
   }
 
   function startPinch(touches) {
-    // A second finger landing takes priority over any single-finger
-    // drag or corner-resize already in progress, so state doesn't
-    // fight itself and cause jitter.
     isDragging = false;
     isResizing = false;
     isPinching = true;
@@ -1478,29 +1482,40 @@ function setupWindow(winEl, app) {
     const newDist = touchDistance(touches[0], touches[1]);
     let scale = newDist / pinchStartDist;
 
-    // Keep the resulting size within sane bounds (never smaller than
-    // the window's usual minimum, never bigger than the viewport)
-    // while preserving the aspect ratio the pinch started with.
-    const minW = 280, minH = 180;
+    // Use dynamic minimums based on device type
+    const currentMinW = isMobileView() ? 240 : 320;
+    const currentMinH = isMobileView() ? 160 : 200;
+    
     const maxW = window.innerWidth - SCREEN_MARGIN * 2;
     const maxH = window.innerHeight - TASKBAR_HEIGHT - SCREEN_MARGIN * 2;
 
     const maxAllowedScale = Math.min(maxW / pinchStartW, maxH / pinchStartH);
-    const minAllowedScale = Math.max(minW / pinchStartW, minH / pinchStartH);
-    scale = Math.min(Math.max(scale, minAllowedScale), maxAllowedScale);
+    const minAllowedScale = Math.max(currentMinW / pinchStartW, currentMinH / pinchStartH);
+
+    // Safely clamp the scale to avoid conflicts on extremely narrow screens
+    if (minAllowedScale > maxAllowedScale) {
+      scale = maxAllowedScale; 
+    } else {
+      scale = Math.min(Math.max(scale, minAllowedScale), maxAllowedScale);
+    }
 
     const newW = pinchStartW * scale;
     const newH = pinchStartH * scale;
 
-    // Anchor on the window's original center so it grows/shrinks in
-    // place under the fingers rather than drifting toward a corner.
-    const newLeft = pinchCenterX - newW / 2;
-    const newTop = pinchCenterY - newH / 2;
+    let newLeft = pinchCenterX - newW / 2;
+    let newTop = pinchCenterY - newH / 2;
+
+    // Strict boundary clamping for all edges (Top, Bottom, Left, Right)
+    if (newLeft < SCREEN_MARGIN) newLeft = SCREEN_MARGIN;
+    if (newLeft + newW > window.innerWidth - SCREEN_MARGIN) newLeft = window.innerWidth - SCREEN_MARGIN - newW;
+
+    if (newTop < SCREEN_MARGIN) newTop = SCREEN_MARGIN;
+    if (newTop + newH > window.innerHeight - TASKBAR_HEIGHT - SCREEN_MARGIN) newTop = window.innerHeight - TASKBAR_HEIGHT - SCREEN_MARGIN - newH;
 
     winEl.style.width = newW + 'px';
     winEl.style.height = newH + 'px';
-    winEl.style.left = Math.max(SCREEN_MARGIN, newLeft) + 'px';
-    winEl.style.top = Math.max(0, newTop) + 'px';
+    winEl.style.left = newLeft + 'px';
+    winEl.style.top = newTop + 'px';
   }
 
   function endPinch() {
@@ -1508,10 +1523,20 @@ function setupWindow(winEl, app) {
     pinchStartDist = 0;
   }
 
+  // Allow pinch if both fingers start directly on the window
   winEl.addEventListener('touchstart', (e) => {
     if (e.touches.length === 2) {
       startPinch(e.touches);
       e.preventDefault();
+    }
+  }, { passive: false });
+
+  // Catch pinch if one finger is on the window and the second lands on the desktop
+  document.addEventListener('touchstart', (e) => {
+    if (!isPinching && e.touches.length === 2) {
+      if (winEl.contains(e.touches[0].target) || winEl.contains(e.touches[1].target)) {
+        startPinch(e.touches);
+      }
     }
   }, { passive: false });
 
@@ -1525,8 +1550,8 @@ function setupWindow(winEl, app) {
   document.addEventListener('touchend', (e) => {
     if (isPinching && e.touches.length < 2) endPinch();
   });
+  
   document.addEventListener('touchcancel', () => { endPinch(); });
-}
 
 // ---- Media Player (Music app) ----
 
