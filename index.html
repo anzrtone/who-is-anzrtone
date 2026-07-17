@@ -1096,8 +1096,14 @@ function fitWindowToScreen(winEl, app) {
   const maxW = window.innerWidth - SCREEN_MARGIN * 2;
   const maxH = window.innerHeight - TASKBAR_HEIGHT - SCREEN_MARGIN * 2;
 
-  const targetW = Math.min(app.width, maxW);
-  const targetH = Math.min(app.height, maxH);
+  // Scale both dimensions by the same factor so the window keeps its
+  // original desktop width:height ratio instead of being independently
+  // squashed on one axis. Never scale up past the desktop size (scale
+  // is capped at 1) — only shrink to fit when the viewport is smaller.
+  const scale = Math.min(1, maxW / app.width, maxH / app.height);
+
+  const targetW = Math.round(app.width * scale);
+  const targetH = Math.round(app.height * scale);
 
   winEl.style.width = targetW + 'px';
   winEl.style.height = targetH + 'px';
@@ -1431,6 +1437,95 @@ function setupWindow(winEl, app) {
 
   document.addEventListener('touchend', () => { isResizing = false; });
   document.addEventListener('touchcancel', () => { isResizing = false; });
+
+  // ---- Pinch-to-resize (two-finger touch gesture) ----
+  // Lets a mobile user place two fingers anywhere on the window and
+  // pinch in/out to shrink/grow it. Coexists with single-finger
+  // dragging by taking over (and disabling drag/corner-resize) the
+  // moment a second finger touches down, and cleanly handing control
+  // back once fewer than two fingers remain.
+  let isPinching = false;
+  let pinchStartDist = 0;
+  let pinchStartW = 0, pinchStartH = 0;
+  let pinchCenterX = 0, pinchCenterY = 0;
+
+  function touchDistance(t1, t2) {
+    return Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+  }
+
+  function startPinch(touches) {
+    // A second finger landing takes priority over any single-finger
+    // drag or corner-resize already in progress, so state doesn't
+    // fight itself and cause jitter.
+    isDragging = false;
+    isResizing = false;
+    isPinching = true;
+
+    pinchStartDist = touchDistance(touches[0], touches[1]);
+    pinchStartW = winEl.offsetWidth;
+    pinchStartH = winEl.offsetHeight;
+
+    const rect = winEl.getBoundingClientRect();
+    pinchCenterX = rect.left + rect.width / 2;
+    pinchCenterY = rect.top + rect.height / 2;
+
+    bringToFront(winEl);
+  }
+
+  function doPinch(touches) {
+    if (!isPinching || pinchStartDist <= 0) return;
+
+    const newDist = touchDistance(touches[0], touches[1]);
+    let scale = newDist / pinchStartDist;
+
+    // Keep the resulting size within sane bounds (never smaller than
+    // the window's usual minimum, never bigger than the viewport)
+    // while preserving the aspect ratio the pinch started with.
+    const minW = 280, minH = 180;
+    const maxW = window.innerWidth - SCREEN_MARGIN * 2;
+    const maxH = window.innerHeight - TASKBAR_HEIGHT - SCREEN_MARGIN * 2;
+
+    const maxAllowedScale = Math.min(maxW / pinchStartW, maxH / pinchStartH);
+    const minAllowedScale = Math.max(minW / pinchStartW, minH / pinchStartH);
+    scale = Math.min(Math.max(scale, minAllowedScale), maxAllowedScale);
+
+    const newW = pinchStartW * scale;
+    const newH = pinchStartH * scale;
+
+    // Anchor on the window's original center so it grows/shrinks in
+    // place under the fingers rather than drifting toward a corner.
+    const newLeft = pinchCenterX - newW / 2;
+    const newTop = pinchCenterY - newH / 2;
+
+    winEl.style.width = newW + 'px';
+    winEl.style.height = newH + 'px';
+    winEl.style.left = Math.max(SCREEN_MARGIN, newLeft) + 'px';
+    winEl.style.top = Math.max(0, newTop) + 'px';
+  }
+
+  function endPinch() {
+    isPinching = false;
+    pinchStartDist = 0;
+  }
+
+  winEl.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 2) {
+      startPinch(e.touches);
+      e.preventDefault();
+    }
+  }, { passive: false });
+
+  document.addEventListener('touchmove', (e) => {
+    if (isPinching && e.touches.length === 2) {
+      doPinch(e.touches);
+      e.preventDefault();
+    }
+  }, { passive: false });
+
+  document.addEventListener('touchend', (e) => {
+    if (isPinching && e.touches.length < 2) endPinch();
+  });
+  document.addEventListener('touchcancel', () => { endPinch(); });
 }
 
 // ---- Media Player (Music app) ----
