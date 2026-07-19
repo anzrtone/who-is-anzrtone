@@ -37,6 +37,8 @@
     position: absolute;
     top: 20px;
     left: 20px;
+    right: 0;
+    bottom: 40px; /* keep the drag/drop + selection surface clear of the taskbar */
     display: flex;
     flex-direction: column;
     gap: 22px;
@@ -44,11 +46,13 @@
   }
 
   .desktop-icon {
+    position: absolute;
     width: 80px;
     text-align: center;
     cursor: pointer;
     padding: 6px 4px;
     border-radius: 4px;
+    touch-action: none;
   }
 
   .desktop-icon:hover,
@@ -57,10 +61,29 @@
     outline: 1px dotted rgba(255,255,255,0.6);
   }
 
+  .desktop-icon.dragging {
+    background: rgba(30, 80, 160, 0.45);
+    outline: 1px dotted rgba(255,255,255,0.8);
+    z-index: 50;
+    cursor: grabbing;
+  }
+
   .desktop-icon img {
     width: 48px;
     height: 48px;
     image-rendering: pixelated;
+    pointer-events: none;
+    -webkit-user-drag: none;
+    user-drag: none;
+  }
+
+  /* Rectangular marquee-selection box, drawn while dragging on empty
+     desktop space with either the left or right mouse button */
+  .marquee-select {
+    position: absolute;
+    border: 1px dashed rgba(255,255,255,0.9);
+    background: rgba(120, 170, 255, 0.25);
+    z-index: 40;
     pointer-events: none;
   }
 
@@ -705,6 +728,8 @@
       height: 100%;
       top: auto;
       left: auto;
+      right: auto;
+      bottom: auto;
       margin: 0;
       padding: 18px 6px;
       box-sizing: border-box;
@@ -717,8 +742,13 @@
       z-index: 2;
     }
 
+    /* Desktop-only drag-and-drop grid is disabled on mobile: icons
+       go back to being normal flex-list items so the rail scrolls
+       and taps behave as before. */
     .desktop-icon {
+      position: static;
       width: 100%;
+      touch-action: pan-y;
     }
 
     /* Desktop-only chrome that has no place on mobile */
@@ -751,17 +781,8 @@
       z-index: 0;
     }
 
-    #mobile-placeholder .mp-cover {
-      width: 56px;
-      height: 56px;
-      background: #eef3fb;
-      border: 1px solid #cddaee;
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 26px;
-      color: #6f89ad;
+    #mobile-placeholder .mp-placeholder-text {
+      font-family: Tahoma, Verdana, Arial, sans-serif;
     }
 
     /* Windows fill the whole right pane instead of floating */
@@ -791,6 +812,47 @@
     .xp-window .btn-max {
       opacity: 0.55;
     }
+
+    /* ==========================================================
+       MUSIC PLAYER — mobile-only layout fix
+       Controls row (play/prev/next, seek slider, time, loop) and
+       the volume row were overflowing off the right edge on small
+       screens. Let them wrap instead of forcing everything into
+       one line.
+       ========================================================== */
+    .mp-controls {
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .mp-seek {
+      flex: 1;
+      min-width: 120px;
+      /* Drop the slider onto its own full-width row so the
+         buttons, time, and loop control aren't squeezed out. */
+      order: 1;
+      flex-basis: 100%;
+    }
+
+    .mp-time {
+      order: 2;
+      flex-shrink: 0;
+    }
+
+    .mp-btn.mp-loop-btn {
+      order: 3;
+      flex-shrink: 0;
+    }
+
+    .mp-volume-row {
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .mp-volume {
+      flex: 1;
+      min-width: 120px;
+    }
   }
 </style>
 </head>
@@ -805,8 +867,7 @@
   <div id="windows-container">
     <!-- Shown only on mobile, only when no app is currently open -->
     <div id="mobile-placeholder">
-      <div class="mp-cover">&#128187;</div>
-      <div>Tap an icon on the left to open it here.</div>
+      <div class="mp-placeholder-text">Tap an icon on the left to open it here.</div>
     </div>
   </div>
 
@@ -864,7 +925,7 @@ My academic interests include economics, mathematics, and finance. I want to pur
 
 I was raised in the United States and moved to Bangladesh circa. 2019. My life has been largely shaped by culture shock and the experience of living in two very different countries. It has humbled me tremendously.
 
-I love music. I am currently learning piano, and I have been writing songs in my bedroom for almost 2 years now. 
+I love music. I am currently learning piano, and I have been writing songs in my bedroom for over 2 years now. 
 
 I aspire to connect with people through my music. Thank you for stopping by, feel free to play around with the features on this little website.`
   },
@@ -979,6 +1040,146 @@ function isMobileMode() {
   return window.matchMedia('(max-width: 768px)').matches;
 }
 
+// =====================================================================
+// DESKTOP ICON GRID
+// Icons live on a fixed invisible grid (desktop mode only). Each cell
+// can hold at most one icon, so icons can never overlap or collide,
+// and dragging one to a busy spot (including a crowded screen edge)
+// snaps it to the nearest open cell instead of stacking/collapsing.
+// =====================================================================
+const GRID_CELL_W = 100;
+const GRID_CELL_H = 96;
+const DRAG_THRESHOLD = 4; // px of movement before a press counts as a drag, not a click
+
+const gridOccupancy = new Map(); // "col,row" -> appId
+const iconGridPos = {};          // appId -> { col, row }
+let dragState = null;
+let marqueeState = null;
+
+function cellKey(col, row) { return col + ',' + row; }
+
+function gridBounds() {
+  const rect = iconColumn.getBoundingClientRect();
+  return {
+    cols: Math.max(1, Math.floor(rect.width / GRID_CELL_W)),
+    rows: Math.max(1, Math.floor(rect.height / GRID_CELL_H))
+  };
+}
+
+function cellToPixel(col, row) {
+  return { left: col * GRID_CELL_W, top: row * GRID_CELL_H };
+}
+
+function pixelToCell(x, y) {
+  return { col: Math.round(x / GRID_CELL_W), row: Math.round(y / GRID_CELL_H) };
+}
+
+function clampCell(col, row) {
+  const { cols, rows } = gridBounds();
+  return {
+    col: Math.min(Math.max(col, 0), cols - 1),
+    row: Math.min(Math.max(row, 0), rows - 1)
+  };
+}
+
+// Finds the closest unoccupied cell to (col,row), searching outward in
+// expanding rings. This is what makes edges/corners "push into the
+// bottom of the stack" instead of letting two icons collapse together.
+function findFreeCell(col, row, ignoreAppId) {
+  const { cols, rows } = gridBounds();
+  const isFree = (c, r) => {
+    if (c < 0 || r < 0 || c >= cols || r >= rows) return false;
+    const occupant = gridOccupancy.get(cellKey(c, r));
+    return !occupant || occupant === ignoreAppId;
+  };
+  const start = clampCell(col, row);
+  if (isFree(start.col, start.row)) return start;
+
+  const maxRadius = cols + rows;
+  for (let radius = 1; radius <= maxRadius; radius++) {
+    for (let dr = -radius; dr <= radius; dr++) {
+      for (let dc = -radius; dc <= radius; dc++) {
+        if (Math.max(Math.abs(dr), Math.abs(dc)) !== radius) continue;
+        const c = start.col + dc, r = start.row + dr;
+        if (isFree(c, r)) return { col: c, row: r };
+      }
+    }
+  }
+  // Grid is completely full — keep the icon where it was rather than
+  // losing it or letting it overlap another icon.
+  return iconGridPos[ignoreAppId] || start;
+}
+
+function placeIconAtCell(appId, iconEl, col, row, animate) {
+  const prev = iconGridPos[appId];
+  if (prev) gridOccupancy.delete(cellKey(prev.col, prev.row));
+  gridOccupancy.set(cellKey(col, row), appId);
+  iconGridPos[appId] = { col, row };
+  const { left, top } = cellToPixel(col, row);
+  iconEl.style.transition = animate ? 'left .12s ease, top .12s ease' : 'none';
+  iconEl.style.left = left + 'px';
+  iconEl.style.top = top + 'px';
+}
+
+function desktopRelativePoint(clientX, clientY) {
+  const rect = iconColumn.getBoundingClientRect();
+  return { x: clientX - rect.left, y: clientY - rect.top };
+}
+
+// ---- Rectangular marquee selection on empty desktop space ----
+// Works with either the left or right mouse button, matching how
+// click-and-drag selection works on Windows.
+iconColumn.addEventListener('pointerdown', (e) => {
+  if (isMobileMode() || e.target !== iconColumn) return;
+  if (e.button !== 0 && e.button !== 2) return;
+  const pt = desktopRelativePoint(e.clientX, e.clientY);
+  marqueeState = { pointerId: e.pointerId, startX: pt.x, startY: pt.y, boxEl: null };
+  iconColumn.setPointerCapture(e.pointerId);
+  document.querySelectorAll('.desktop-icon').forEach(el => el.classList.remove('selected'));
+});
+
+iconColumn.addEventListener('pointermove', (e) => {
+  if (!marqueeState || marqueeState.pointerId !== e.pointerId) return;
+  const pt = desktopRelativePoint(e.clientX, e.clientY);
+  const x1 = Math.min(marqueeState.startX, pt.x);
+  const y1 = Math.min(marqueeState.startY, pt.y);
+  const w = Math.abs(pt.x - marqueeState.startX);
+  const h = Math.abs(pt.y - marqueeState.startY);
+
+  if (!marqueeState.boxEl) {
+    if (w < DRAG_THRESHOLD && h < DRAG_THRESHOLD) return;
+    const box = document.createElement('div');
+    box.className = 'marquee-select';
+    iconColumn.appendChild(box);
+    marqueeState.boxEl = box;
+  }
+  const box = marqueeState.boxEl;
+  box.style.left = x1 + 'px';
+  box.style.top = y1 + 'px';
+  box.style.width = w + 'px';
+  box.style.height = h + 'px';
+
+  const selRect = { left: x1, top: y1, right: x1 + w, bottom: y1 + h };
+  document.querySelectorAll('.desktop-icon').forEach(el => {
+    const iLeft = parseFloat(el.style.left) || 0;
+    const iTop = parseFloat(el.style.top) || 0;
+    const iRect = { left: iLeft, top: iTop, right: iLeft + el.offsetWidth, bottom: iTop + el.offsetHeight };
+    const intersects = iRect.left < selRect.right && iRect.right > selRect.left &&
+                        iRect.top < selRect.bottom && iRect.bottom > selRect.top;
+    el.classList.toggle('selected', intersects);
+  });
+});
+
+function finishMarquee(e) {
+  if (!marqueeState || marqueeState.pointerId !== e.pointerId) return;
+  iconColumn.releasePointerCapture(marqueeState.pointerId);
+  if (marqueeState.boxEl) marqueeState.boxEl.remove();
+  marqueeState = null;
+}
+iconColumn.addEventListener('pointerup', finishMarquee);
+iconColumn.addEventListener('pointercancel', finishMarquee);
+iconColumn.addEventListener('contextmenu', (e) => e.preventDefault());
+
 // ---- Build desktop icons, windows, and start menu items from APPS ----
 APPS.forEach((app, index) => {
 
@@ -991,6 +1192,65 @@ APPS.forEach((app, index) => {
     <div class="icon-label">${app.name}</div>
   `;
   iconColumn.appendChild(iconEl);
+  placeIconAtCell(app.id, iconEl, 0, index, false);
+
+  // ---- Drag-to-grid (desktop only, either left or right mouse button) ----
+  // Dragging never lets one icon land on top of another: on drop we snap
+  // to the nearest free grid cell, so icons can't collide or overlap,
+  // and pushing one into a crowded edge slots it into the next open
+  // spot in the stack instead of collapsing into a neighbor.
+  iconEl.addEventListener('pointerdown', (e) => {
+    if (isMobileMode() || (e.button !== 0 && e.button !== 2)) return;
+    iconEl.setPointerCapture(e.pointerId);
+    dragState = {
+      appId: app.id,
+      iconEl,
+      pointerId: e.pointerId,
+      startClientX: e.clientX,
+      startClientY: e.clientY,
+      startLeft: parseFloat(iconEl.style.left) || 0,
+      startTop: parseFloat(iconEl.style.top) || 0,
+      moved: false
+    };
+  });
+
+  iconEl.addEventListener('pointermove', (e) => {
+    if (!dragState || dragState.iconEl !== iconEl || dragState.pointerId !== e.pointerId) return;
+    const dx = e.clientX - dragState.startClientX;
+    const dy = e.clientY - dragState.startClientY;
+    if (!dragState.moved) {
+      if (Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
+      dragState.moved = true;
+      iconEl.classList.add('dragging');
+      iconEl.style.transition = 'none';
+    }
+    const { cols, rows } = gridBounds();
+    const maxLeft = (cols - 1) * GRID_CELL_W;
+    const maxTop = (rows - 1) * GRID_CELL_H;
+    // Clamp to the grid surface itself while dragging so an icon can
+    // never be pulled past the desktop edges or under the taskbar.
+    const newLeft = Math.min(Math.max(dragState.startLeft + dx, 0), maxLeft);
+    const newTop = Math.min(Math.max(dragState.startTop + dy, 0), maxTop);
+    iconEl.style.left = newLeft + 'px';
+    iconEl.style.top = newTop + 'px';
+  });
+
+  function finishIconDrag(e) {
+    if (!dragState || dragState.iconEl !== iconEl || dragState.pointerId !== e.pointerId) return;
+    iconEl.releasePointerCapture(dragState.pointerId);
+    iconEl.classList.remove('dragging');
+    if (dragState.moved) {
+      const left = parseFloat(iconEl.style.left) || 0;
+      const top = parseFloat(iconEl.style.top) || 0;
+      const desired = clampCell(pixelToCell(left, top).col, pixelToCell(left, top).row);
+      const target = findFreeCell(desired.col, desired.row, dragState.appId);
+      placeIconAtCell(dragState.appId, iconEl, target.col, target.row, true);
+    }
+    dragState = null;
+  }
+  iconEl.addEventListener('pointerup', finishIconDrag);
+  iconEl.addEventListener('pointercancel', finishIconDrag);
+  iconEl.addEventListener('contextmenu', (e) => e.preventDefault());
 
   // Single click = select icon, Double click = open window (desktop).
   // On mobile there is no double-click — a single tap both selects
