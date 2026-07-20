@@ -422,7 +422,7 @@
     height: 26px;
     border: 1px solid rgba(255,255,255,0.5);
     border-radius: 2px;
-    background: linear-gradient(180deg, #6fe06f, #1e9c1e);
+    background: var(--start-button-bg);
     color: white;
     font-size: 12px;
     cursor: pointer;
@@ -433,7 +433,7 @@
   }
 
   .mp-btn:hover {
-    background: linear-gradient(180deg, #83ee83, #2aac2a);
+    filter: brightness(1.15);
   }
 
   .mp-btn.mp-btn-small {
@@ -442,22 +442,14 @@
   }
 
   .mp-btn.mp-loop-btn {
-    background: linear-gradient(180deg, #bcd6f5, #6f9fdb);
+    background: var(--window-header-bg);
     border: 1px solid rgba(255,255,255,0.6);
   }
 
-  .mp-btn.mp-loop-btn:hover {
-    background: linear-gradient(180deg, #cfe4ff, #83b0e6);
-  }
-
   .mp-btn.mp-loop-btn.active {
-    background: linear-gradient(180deg, #1e9c1e, #145c14);
+    background: var(--start-button-bg);
     box-shadow: inset 1px 1px 3px rgba(0,0,0,0.6);
     border: 1px solid rgba(0,0,0,0.5);
-  }
-
-  .mp-btn.mp-loop-btn.active:hover {
-    background: linear-gradient(180deg, #26b026, #1a701a);
   }
 
   .mp-seek {
@@ -482,8 +474,8 @@
     height: 18px;
     margin-top: -6px;
     border-radius: 2px;
-    background: linear-gradient(180deg, #9fef6f, #4fae1e);
-    border: 1px solid #2a7a0a;
+    background: var(--start-button-bg);
+    border: 1px solid rgba(0,0,0,0.5);
     box-shadow: 1px 1px 2px rgba(0,0,0,0.4);
     cursor: pointer;
   }
@@ -497,8 +489,8 @@
     width: 12px;
     height: 18px;
     border-radius: 2px;
-    background: linear-gradient(180deg, #9fef6f, #4fae1e);
-    border: 1px solid #2a7a0a;
+    background: var(--start-button-bg);
+    border: 1px solid rgba(0,0,0,0.5);
     box-shadow: 1px 1px 2px rgba(0,0,0,0.4);
     cursor: pointer;
   }
@@ -540,8 +532,8 @@
     height: 18px;
     margin-top: -6px;
     border-radius: 2px;
-    background: linear-gradient(180deg, #9fef6f, #4fae1e);
-    border: 1px solid #2a7a0a;
+    background: var(--start-button-bg);
+    border: 1px solid rgba(0,0,0,0.5);
     box-shadow: 1px 1px 2px rgba(0,0,0,0.4);
     cursor: pointer;
   }
@@ -555,8 +547,8 @@
     width: 12px;
     height: 18px;
     border-radius: 2px;
-    background: linear-gradient(180deg, #9fef6f, #4fae1e);
-    border: 1px solid #2a7a0a;
+    background: var(--start-button-bg);
+    border: 1px solid rgba(0,0,0,0.5);
     box-shadow: 1px 1px 2px rgba(0,0,0,0.4);
     cursor: pointer;
   }
