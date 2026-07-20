@@ -9,12 +9,78 @@
   /* ============================================================
      BASIC PAGE SETUP
      ============================================================ */
+  /* ============================================================
+     PERSONALIZE — THEME VARIABLES
+     ============================================================
+     Every theme (Luna/XP, Saya no Uta, Classic 98) is just a set
+     of overrides for these custom properties, defined on `body`.
+     Advanced tab overrides (custom wallpaper/taskbar image/colors)
+     are applied as inline styles on top of whichever theme class
+     is active, via JS setProperty() — see the Personalize script
+     block near the bottom of the file.
+     ============================================================ */
+  body {
+    /* -- defaults == Luna (Windows XP), the site's original look -- */
+    --bg-wallpaper: url('bliss.png');
+    --bg-fallback-color: #3a6ea5;
+    --window-header-bg: linear-gradient(180deg, #2f7bde 0%, #1f5fce 8%, #1148c4 40%, #0a3fc0 60%, #1854d8 88%, #2f6fe0 100%);
+    --window-border-color: #0831d9;
+    --window-bg: #ffffff;
+    --taskbar-bg: linear-gradient(180deg, #2f6fe0 0%, #1650c9 4%, #0d3fb8 50%, #123fc0 60%, #1a56d6 96%, #2f6fe0 100%);
+    --taskbar-image: none;         /* uploaded taskbar underlay, set via Advanced tab */
+    --taskbar-image-opacity: 0;    /* fades in once an underlay image is set */
+    --taskbar-glass-tint: rgba(255,255,255,0); /* frosted-glass tint over the underlay */
+    --start-button-bg: linear-gradient(180deg, #6fe06f 0%, #3fc23f 40%, #1e9c1e 60%, #2fb82f 100%);
+    --start-icon-bg: conic-gradient(from 90deg, #f25022 90deg, #7fba00 90deg 180deg, #00a4ef 180deg 270deg, #ffb900 270deg 360deg);
+    --system-tray-bg: linear-gradient(180deg, #1450c4, #0a3aa8);
+    --text-color: #1a1a1a;
+    --font-family: Tahoma, Verdana, Arial, sans-serif;
+    --icon-label-color: #ffffff;
+    --cursor-icon: default; /* architecture hook for future custom cursor themes */
+  }
+
+  /* ---- Saya no Uta: dark / corrupted aesthetic ---- */
+  body.theme-saya {
+    --bg-wallpaper: none;
+    --bg-fallback-color: #0b0000;
+    --window-header-bg: linear-gradient(180deg, #4a0000 0%, #260000 50%, #120000 100%);
+    --window-border-color: #7a0000;
+    --window-bg: #150808;
+    --taskbar-bg: linear-gradient(180deg, #1a0000 0%, #060000 100%);
+    --start-button-bg: linear-gradient(180deg, #6b0000 0%, #3a0000 60%, #1a0000 100%);
+    --start-icon-bg: conic-gradient(from 90deg, #8b0000 90deg, #4a0000 90deg 180deg, #200000 180deg 270deg, #a30000 270deg 360deg);
+    --system-tray-bg: linear-gradient(180deg, #3a0000, #150000);
+    --text-color: #c9a3a3;
+    --font-family: 'Courier New', Consolas, monospace;
+    --icon-label-color: #d64545;
+    --cursor-icon: 'themes/saya-cursor.png';
+  }
+
+  /* ---- Classic 98: minimalist gray UI ---- */
+  body.theme-classic98 {
+    --bg-wallpaper: none;
+    --bg-fallback-color: #808080;
+    --window-header-bg: #000080;
+    --window-border-color: #808080;
+    --window-bg: #c0c0c0;
+    --taskbar-bg: #c0c0c0;
+    --start-button-bg: #c0c0c0;
+    --start-icon-bg: linear-gradient(135deg, #000080 50%, #c0c0c0 50%);
+    --system-tray-bg: #c0c0c0;
+    --text-color: #000000;
+    --font-family: 'MS Sans Serif', Tahoma, Verdana, sans-serif;
+    --icon-label-color: #ffffff;
+    --cursor-icon: default;
+  }
+
   html, body {
     margin: 0;
     padding: 0;
     height: 100%;
     overflow: hidden;
-    font-family: Tahoma, Verdana, Arial, sans-serif;
+    font-family: var(--font-family);
+    color: var(--text-color);
+    cursor: var(--cursor-icon);
     -webkit-user-select: none;
     user-select: none;
   }
@@ -23,10 +89,10 @@
     position: relative;
     width: 100%;
     height: 100vh;
-    background-image: url('bliss.png');
+    background-image: var(--bg-wallpaper);
     background-size: cover;
     background-position: center bottom;
-    background-color: #3a6ea5; /* fallback color if image fails to load */
+    background-color: var(--bg-fallback-color); /* fallback color if image fails to load */
     overflow: hidden;
   }
 
@@ -77,6 +143,13 @@
     user-drag: none;
   }
 
+  /* The Personalize icon is a mobile-only dedicated app icon — on
+     desktop it's reached via the right-click "Personalize..." Easter
+     egg instead, so the icon itself stays hidden above 768px. */
+  .desktop-icon.personalize-icon {
+    display: none;
+  }
+
   /* Rectangular marquee-selection box, drawn while dragging on empty
      desktop space with either the left or right mouse button */
   .marquee-select {
@@ -88,7 +161,7 @@
   }
 
   .desktop-icon .icon-label {
-    color: #ffffff;
+    color: var(--icon-label-color);
     font-size: 12px;
     margin-top: 4px;
     line-height: 1.2;
@@ -111,8 +184,8 @@
     min-height: 200px;
     width: 480px;
     height: 340px;
-    background: #ffffff;
-    border: 1px solid #0831d9;
+    background: var(--window-bg);
+    border: 1px solid var(--window-border-color);
     border-radius: 8px 8px 4px 4px;
     box-shadow: 3px 3px 12px rgba(0,0,0,0.5);
     display: none; /* toggled to flex via JS when opened */
@@ -129,7 +202,7 @@
   }
 
   .xp-titlebar {
-    background: linear-gradient(180deg, #2f7bde 0%, #1f5fce 8%, #1148c4 40%, #0a3fc0 60%, #1854d8 88%, #2f6fe0 100%);
+    background: var(--window-header-bg);
     color: white;
     font-weight: bold;
     font-size: 13px;
@@ -572,17 +645,51 @@
     left: 0;
     width: 100%;
     height: 40px;
-    background: linear-gradient(180deg, #2f6fe0 0%, #1650c9 4%, #0d3fb8 50%, #123fc0 60%, #1a56d6 96%, #2f6fe0 100%);
+    background: var(--taskbar-bg);
     display: flex;
     align-items: center;
     z-index: 1000;
     box-shadow: 0 -2px 6px rgba(0,0,0,0.4);
   }
 
+  /* Uploaded taskbar image (Advanced tab) sits blurred underneath a
+     frosted tint, giving the "foggy glass" underlay look. Both layers
+     are transparent/off by default (--taskbar-image: none). */
+  #taskbar::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: var(--taskbar-image);
+    background-size: cover;
+    background-position: center;
+    opacity: var(--taskbar-image-opacity);
+    filter: blur(5px) saturate(1.1);
+    z-index: 0;
+    pointer-events: none;
+    transition: opacity .25s ease;
+  }
+
+  #taskbar::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--taskbar-glass-tint);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* Keep real taskbar content above the fog layers */
+  #start-button, #taskbar-tasks, #system-tray {
+    position: relative;
+    z-index: 1;
+  }
+
   #start-button {
     height: 40px;
     padding: 0 18px 0 12px;
-    background: linear-gradient(180deg, #6fe06f 0%, #3fc23f 40%, #1e9c1e 60%, #2fb82f 100%);
+    background: var(--start-button-bg);
     color: white;
     font-weight: bold;
     font-style: italic;
@@ -597,13 +704,15 @@
   }
 
   #start-button:hover {
-    background: linear-gradient(180deg, #83ee83, #4fd44f, #2aac2a, #3fc63f);
+    filter: brightness(1.14);
   }
 
   #start-button .xp-logo {
     width: 20px;
     height: 20px;
-    background: conic-gradient(from 90deg, #f25022 90deg, #7fba00 90deg 180deg, #00a4ef 180deg 270deg, #ffb900 270deg 360deg);
+    background: var(--start-icon-bg);
+    background-size: cover;
+    background-position: center;
     border-radius: 3px;
     display: inline-block;
   }
@@ -651,7 +760,7 @@
     padding: 0 14px;
     color: white;
     font-size: 12px;
-    background: linear-gradient(180deg, #1450c4, #0a3aa8);
+    background: var(--system-tray-bg);
     border-left: 1px solid rgba(255,255,255,0.3);
   }
 
@@ -661,8 +770,8 @@
     bottom: 40px;
     left: 0;
     width: 230px;
-    background: #ffffff;
-    border: 1px solid #0831d9;
+    background: var(--window-bg, #ffffff);
+    border: 1px solid var(--window-border-color, #0831d9);
     border-radius: 6px 6px 0 0;
     box-shadow: 3px 3px 10px rgba(0,0,0,0.5);
     display: none;
@@ -673,7 +782,7 @@
   #start-menu.open { display: block; }
 
   #start-menu-header {
-    background: linear-gradient(180deg, #2f7bde, #1148c4);
+    background: var(--window-header-bg, linear-gradient(180deg, #2f7bde, #1148c4));
     color: white;
     font-weight: bold;
     padding: 10px 12px;
@@ -688,11 +797,11 @@
     align-items: center;
     gap: 8px;
     cursor: pointer;
-    color: #222;
+    color: var(--text-color, #222);
   }
 
   .start-menu-item:hover {
-    background: #2f7bde;
+    background: var(--window-header-bg, #2f7bde);
     color: white;
   }
 
@@ -735,10 +844,10 @@
       box-sizing: border-box;
       gap: 26px;
       overflow-y: auto;
-      background-image: url('bliss.png');
+      background-image: var(--bg-wallpaper);
       background-size: cover;
       background-position: center bottom;
-      background-color: #3a6ea5;
+      background-color: var(--bg-fallback-color);
       z-index: 2;
     }
 
@@ -749,6 +858,11 @@
       position: static;
       width: 100%;
       touch-action: pan-y;
+    }
+
+    /* Personalize becomes a normal tappable app icon on mobile */
+    .desktop-icon.personalize-icon {
+      display: block;
     }
 
     /* Desktop-only chrome that has no place on mobile */
@@ -854,6 +968,327 @@
       min-width: 120px;
     }
   }
+
+  /* ============================================================
+     PERSONALIZE — DESKTOP RIGHT-CLICK CONTEXT MENU (Easter egg)
+     ============================================================ */
+  #desktop-context-menu {
+    position: fixed;
+    min-width: 190px;
+    background: #f0f0f0;
+    border: 1px solid #6b7280;
+    border-radius: 4px;
+    box-shadow: 3px 3px 10px rgba(0,0,0,0.5);
+    padding: 3px;
+    z-index: 3000;
+    display: none;
+    font-family: Tahoma, Verdana, Arial, sans-serif;
+    font-size: 13px;
+  }
+
+  #desktop-context-menu.open {
+    display: block;
+  }
+
+  #desktop-context-menu .ctx-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    color: #1a1a1a;
+    cursor: pointer;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+
+  #desktop-context-menu .ctx-item:hover {
+    background: var(--window-header-bg, #1148c4);
+    color: #ffffff;
+  }
+
+  #desktop-context-menu .ctx-item img {
+    width: 16px;
+    height: 16px;
+    image-rendering: pixelated;
+    flex-shrink: 0;
+  }
+
+  #desktop-context-menu .ctx-item .ctx-spacer {
+    display: inline-block;
+    width: 16px;
+    flex-shrink: 0;
+  }
+
+  #desktop-context-menu .ctx-divider {
+    height: 1px;
+    background: #c8c8c8;
+    margin: 3px 4px;
+  }
+
+  /* Desktop-only: this is the Easter egg, so hide it entirely on
+     mobile — mobile users get the dedicated app icon instead. */
+  @media (max-width: 768px) {
+    #desktop-context-menu {
+      display: none !important;
+    }
+  }
+
+  /* ============================================================
+     PERSONALIZE — DISPLAY PROPERTIES WINDOW
+     ============================================================ */
+  #personalize-window {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 420px;
+    max-width: calc(100vw - 24px);
+    height: auto;
+    min-height: 0;
+    transform: translate(-50%, -50%);
+    display: none;
+    flex-direction: column;
+    z-index: 3001;
+    background: var(--window-bg, #ffffff);
+    border: 1px solid var(--window-border-color, #0831d9);
+  }
+
+  #personalize-window.open {
+    display: flex;
+  }
+
+  #personalize-window .xp-window-body {
+    padding: 0;
+    white-space: normal;
+    font-family: Tahoma, Verdana, Arial, sans-serif;
+  }
+
+  .dp-tabs {
+    display: flex;
+    gap: 2px;
+    padding: 8px 10px 0 10px;
+    background: #ece9d8;
+    border-bottom: 1px solid #a0a0a0;
+  }
+
+  .dp-tab {
+    padding: 6px 14px;
+    font-size: 12px;
+    background: #d4d0c8;
+    border: 1px solid #a0a0a0;
+    border-bottom: none;
+    border-radius: 3px 3px 0 0;
+    cursor: pointer;
+    color: #333;
+  }
+
+  .dp-tab.active {
+    background: #ece9d8;
+    font-weight: bold;
+    color: #000;
+    padding-bottom: 7px;
+    margin-bottom: -1px;
+  }
+
+  .dp-panel {
+    background: #ece9d8;
+    padding: 16px;
+    display: none;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .dp-panel.active {
+    display: flex;
+  }
+
+  /* Little "monitor" preview box on the Themes tab */
+  .dp-preview {
+    width: 100%;
+    height: 100px;
+    border: 2px solid #7a7a7a;
+    border-radius: 4px;
+    background-size: cover;
+    background-position: center;
+    background-color: var(--dp-preview-bg, #3a6ea5);
+    background-image: var(--dp-preview-wallpaper, none);
+    position: relative;
+    box-shadow: inset 0 0 0 2px #d4d0c8;
+  }
+
+  .dp-preview .dp-preview-taskbar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 16px;
+    background: var(--dp-preview-taskbar, #1450c4);
+  }
+
+  .dp-preview .dp-preview-window {
+    position: absolute;
+    top: 12px;
+    left: 14px;
+    width: 60%;
+    height: 34px;
+    background: #fff;
+    border: 1px solid var(--dp-preview-border, #0831d9);
+    border-radius: 3px 3px 0 0;
+    overflow: hidden;
+  }
+
+  .dp-preview .dp-preview-window .dp-preview-titlebar {
+    height: 12px;
+    background: var(--dp-preview-header, #1148c4);
+  }
+
+  .dp-preview .dp-preview-start {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 34px;
+    height: 16px;
+    background: var(--dp-preview-start, #3fc23f);
+    border-radius: 0 0 3px 0;
+  }
+
+  .dp-preview .dp-preview-tray {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 26px;
+    height: 16px;
+    background: var(--dp-preview-tray, #1450c4);
+  }
+
+  .dp-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12px;
+    color: #1a1a1a;
+  }
+
+  .dp-field.dp-field-row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .dp-field label {
+    font-weight: bold;
+  }
+
+  .dp-field select {
+    font-family: Tahoma, Verdana, Arial, sans-serif;
+    font-size: 12px;
+    padding: 4px;
+    border: 1px solid #7a7a7a;
+  }
+
+  .dp-field input[type="file"] {
+    font-size: 11px;
+    max-width: 100%;
+  }
+
+  .dp-field input[type="color"] {
+    width: 44px;
+    height: 24px;
+    border: 1px solid #7a7a7a;
+    padding: 0;
+    background: none;
+    cursor: pointer;
+  }
+
+  .dp-hint {
+    font-size: 11px;
+    color: #555;
+    line-height: 1.4;
+  }
+
+  #dp-reset-advanced {
+    align-self: flex-start;
+    font-size: 11px;
+    padding: 4px 10px;
+    font-family: Tahoma, Verdana, Arial, sans-serif;
+    background: #ece9d8;
+    border: 1px solid #a0a0a0;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+
+  .dp-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 10px 14px;
+    background: #ece9d8;
+    border-top: 1px solid #a0a0a0;
+  }
+
+  .dp-buttons button {
+    font-family: Tahoma, Verdana, Arial, sans-serif;
+    font-size: 12px;
+    padding: 5px 16px;
+    border: 1px solid #7a7a7a;
+    border-radius: 3px;
+    background: linear-gradient(180deg, #ffffff, #e0e0e0);
+    cursor: pointer;
+  }
+
+  .dp-buttons button:hover {
+    background: linear-gradient(180deg, #f5f9ff, #cfe0f7);
+  }
+
+  .dp-buttons button:active {
+    background: #d4d0c8;
+  }
+
+  /* The generic mobile rule above (`.xp-window { position:absolute
+     !important; width:100% !important; ... }`) is meant for full-pane
+     app windows living inside #windows-container. #personalize-window
+     lives outside that container and is meant to stay a small floating
+     modal even on mobile, so it needs matching !important overrides
+     (an ID selector + !important beats a class selector + !important). */
+  @media (max-width: 768px) {
+    #personalize-window {
+      position: fixed !important;
+      top: 50% !important;
+      left: 50% !important;
+      width: calc(100vw - 24px) !important;
+      max-width: calc(100vw - 24px) !important;
+      height: auto !important;
+      max-height: 82vh !important;
+      min-width: 0 !important;
+      min-height: 0 !important;
+      transform: translate(-50%, -50%) !important;
+      border: 1px solid var(--window-border-color, #0831d9) !important;
+      border-radius: 8px 8px 4px 4px !important;
+      box-shadow: 3px 3px 16px rgba(0,0,0,0.6) !important;
+      z-index: 3001 !important;
+    }
+
+    #personalize-window .xp-window-body {
+      flex: 1 1 auto !important;
+      overflow-y: auto !important;
+      max-height: calc(82vh - 74px) !important;
+    }
+  }
+
+  /* Dims the page behind the Personalize dialog so it reads clearly
+     as a modal on top of everything, including full-pane mobile
+     app windows. Click it to close, same as Cancel. */
+  #personalize-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 3000;
+    display: none;
+  }
+
+  #personalize-backdrop.open {
+    display: block;
+  }
 </style>
 </head>
 <body>
@@ -885,6 +1320,112 @@
     </div>
     <div id="taskbar-tasks"></div>
     <div id="system-tray"><span id="clock">00:00</span></div>
+  </div>
+
+  <!-- Personalize: desktop right-click Easter egg menu -->
+  <div id="desktop-context-menu">
+    <div class="ctx-item" id="ctx-refresh">
+      <span class="ctx-spacer"></span>
+      <span>Refresh</span>
+    </div>
+    <div class="ctx-divider"></div>
+    <div class="ctx-item" id="ctx-personalize">
+      <img src="windows98-icons/png/monitor_gear.png" alt="">
+      <span>Personalize...</span>
+    </div>
+  </div>
+
+  <!-- Dims the page behind the Display Properties dialog -->
+  <div id="personalize-backdrop"></div>
+
+  <!-- Personalize: "Display Properties" window (shared by the desktop
+       Easter egg and the mobile app icon) -->
+  <div id="personalize-window" class="xp-window">
+    <div class="xp-titlebar">
+      <div class="title-left">
+        <img src="windows98-icons/png/monitor_gear.png" alt="">
+        <span>Display Properties</span>
+      </div>
+      <div class="window-controls">
+        <div class="win-btn btn-close" id="dp-close-btn" title="Close">&times;</div>
+      </div>
+    </div>
+
+    <div class="xp-window-body">
+      <div class="dp-tabs">
+        <div class="dp-tab active" data-dp-tab="themes">Themes</div>
+        <div class="dp-tab" data-dp-tab="advanced">Advanced</div>
+      </div>
+
+      <!-- Themes tab: pick a pre-made theme -->
+      <div class="dp-panel active" data-dp-panel="themes">
+        <div class="dp-preview" id="dp-preview">
+          <div class="dp-preview-window">
+            <div class="dp-preview-titlebar"></div>
+          </div>
+          <div class="dp-preview-taskbar"></div>
+          <div class="dp-preview-start"></div>
+          <div class="dp-preview-tray"></div>
+        </div>
+        <div class="dp-field">
+          <label for="dp-theme-select">Theme:</label>
+          <select id="dp-theme-select">
+            <option value="xp">Luna (Windows XP)</option>
+            <option value="saya">Saya no Uta</option>
+            <option value="classic98">Classic 98</option>
+          </select>
+        </div>
+        <div class="dp-hint">Choose a color scheme. Click Apply to preview it, or OK to apply and close.</div>
+      </div>
+
+      <!-- Advanced tab: hand-tweak individual variables -->
+      <div class="dp-panel" data-dp-panel="advanced">
+        <div class="dp-field">
+          <label for="dp-wallpaper-input">Desktop Wallpaper</label>
+          <input type="file" id="dp-wallpaper-input" accept="image/*">
+        </div>
+        <div class="dp-field">
+          <label for="dp-taskbar-image-input">Taskbar Underlay Image (frosted glass)</label>
+          <input type="file" id="dp-taskbar-image-input" accept="image/*">
+        </div>
+        <div class="dp-field dp-field-row">
+          <label for="dp-taskbar-color-input">Taskbar Color</label>
+          <input type="color" id="dp-taskbar-color-input" value="#1450c4">
+        </div>
+        <div class="dp-field dp-field-row">
+          <label for="dp-titlebar-color-input">Title Bar Color</label>
+          <input type="color" id="dp-titlebar-color-input" value="#1148c4">
+        </div>
+        <div class="dp-field dp-field-row">
+          <label for="dp-border-color-input">Window Border Color</label>
+          <input type="color" id="dp-border-color-input" value="#0831d9">
+        </div>
+        <div class="dp-field dp-field-row">
+          <label for="dp-startbtn-color-input">Start Button Color</label>
+          <input type="color" id="dp-startbtn-color-input" value="#3fc23f">
+        </div>
+        <div class="dp-field">
+          <label for="dp-start-icon-input">Start Button Icon</label>
+          <input type="file" id="dp-start-icon-input" accept="image/*">
+        </div>
+        <div class="dp-field dp-field-row">
+          <label for="dp-tray-color-input">Time Block Color</label>
+          <input type="color" id="dp-tray-color-input" value="#1450c4">
+        </div>
+        <div class="dp-field dp-field-row">
+          <label for="dp-iconlabel-color-input">App Text Color</label>
+          <input type="color" id="dp-iconlabel-color-input" value="#ffffff">
+        </div>
+        <button id="dp-reset-advanced">Reset custom overrides</button>
+        <div class="dp-hint">Custom overrides layer on top of whichever theme is selected, and persist across reloads until reset.</div>
+      </div>
+    </div>
+
+    <div class="dp-buttons">
+      <button id="dp-apply-btn">Apply</button>
+      <button id="dp-ok-btn">OK</button>
+      <button id="dp-cancel-btn">Cancel</button>
+    </div>
   </div>
 
 </div>
@@ -1403,6 +1944,29 @@ APPS.forEach((app, index) => {
   // Wire up window behavior
   setupWindow(winEl, app);
 });
+
+// ---- Personalize desktop icon (mobile-only dedicated app icon) ----
+// Not part of APPS: it doesn't open a normal notepad-style window,
+// it opens the Display Properties window instead. CSS hides this
+// icon entirely above 768px (see .personalize-icon rules) — on
+// desktop, Personalize is reached only via the right-click menu.
+const personalizeIconEl = document.createElement('div');
+personalizeIconEl.className = 'desktop-icon personalize-icon';
+personalizeIconEl.id = 'personalize-desktop-icon';
+personalizeIconEl.innerHTML = `
+  <img src="windows98-icons/png/monitor_gear.png" alt="Personalize">
+  <div class="icon-label">Personalize</div>
+`;
+personalizeIconEl.addEventListener('click', () => {
+  document.querySelectorAll('.desktop-icon').forEach(el => el.classList.remove('selected'));
+  personalizeIconEl.classList.add('selected');
+  if (isMobileMode()) openPersonalizeWindow();
+});
+personalizeIconEl.addEventListener('dblclick', () => {
+  if (!isMobileMode()) openPersonalizeWindow();
+});
+personalizeIconEl.addEventListener('contextmenu', (e) => e.preventDefault());
+iconColumn.appendChild(personalizeIconEl);
 
 // On mobile, the right-hand pane defaults to the "About Me" app
 // instead of the empty placeholder.
@@ -1929,6 +2493,334 @@ function updateClock() {
 }
 updateClock();
 setInterval(updateClock, 1000 * 10);
+
+/* =====================================================================
+   PERSONALIZE — Display Properties (theme switcher)
+   =====================================================================
+   Desktop  : right-click the wallpaper -> "Personalize..." (Easter egg)
+   Mobile   : tap the "Personalize" app icon (see icon built above)
+   Both entry points open the same #personalize-window.
+
+   STATE SHAPE (persisted to localStorage under PERSONALIZE_STORAGE_KEY):
+     {
+       theme: "xp" | "saya" | "classic98",
+       overrides: {
+         wallpaper:     dataURL | null,   // custom desktop background-image
+         taskbarImage:  dataURL | null,   // frosted underlay image on taskbar
+         taskbarColor:  "#rrggbb" | null,
+         titlebarColor: "#rrggbb" | null,
+         borderColor:   "#rrggbb" | null,
+         iconLabelColor: "#rrggbb" | null   // app/icon label text color
+       }
+     }
+
+   Preset themes only swap CSS variables (see body.theme-* in <style>).
+   Advanced overrides are applied as inline custom properties on top
+   of whichever theme is active, so a custom wallpaper/color survives
+   switching themes underneath it.
+   ===================================================================== */
+
+const PERSONALIZE_STORAGE_KEY = 'personalize-settings';
+const PERSONALIZE_THEMES = ['xp', 'saya', 'classic98'];
+
+function defaultPersonalizeState() {
+  return {
+    theme: 'xp',
+    overrides: {
+      wallpaper: null,
+      taskbarImage: null,
+      taskbarColor: null,
+      titlebarColor: null,
+      borderColor: null,
+      startButtonColor: null,
+      startIcon: null,
+      trayColor: null,
+      iconLabelColor: null
+    }
+  };
+}
+
+function loadPersonalizeState() {
+  try {
+    const raw = localStorage.getItem(PERSONALIZE_STORAGE_KEY);
+    if (!raw) return defaultPersonalizeState();
+    const parsed = JSON.parse(raw);
+    const base = defaultPersonalizeState();
+    return {
+      theme: PERSONALIZE_THEMES.includes(parsed.theme) ? parsed.theme : base.theme,
+      overrides: Object.assign({}, base.overrides, parsed.overrides || {})
+    };
+  } catch (err) {
+    return defaultPersonalizeState();
+  }
+}
+
+function savePersonalizeState(state) {
+  try {
+    localStorage.setItem(PERSONALIZE_STORAGE_KEY, JSON.stringify(state));
+  } catch (err) {
+    // localStorage can fail (quota, private mode, etc.) — theme just
+    // won't persist this session, but nothing else breaks.
+    console.warn('Personalize: could not save to localStorage', err);
+  }
+}
+
+// Live, in-memory copy of the applied state (what's actually on screen).
+let personalizeState = loadPersonalizeState();
+// Draft copy the Display Properties window edits before Apply/OK commits it.
+let personalizeDraft = JSON.parse(JSON.stringify(personalizeState));
+
+// Actually paints `state` onto the page: swaps the theme class on
+// <body>, then layers any Advanced-tab overrides on top as inline
+// CSS custom properties.
+function applyPersonalizeState(state) {
+  PERSONALIZE_THEMES.forEach(t => document.body.classList.remove('theme-' + t));
+  document.body.classList.add('theme-' + state.theme);
+
+  const style = document.body.style;
+  const ov = state.overrides;
+
+  if (ov.wallpaper) style.setProperty('--bg-wallpaper', `url("${ov.wallpaper}")`);
+  else style.removeProperty('--bg-wallpaper');
+
+  if (ov.taskbarImage) {
+    style.setProperty('--taskbar-image', `url("${ov.taskbarImage}")`);
+    style.setProperty('--taskbar-image-opacity', '0.55');
+    style.setProperty('--taskbar-glass-tint', 'rgba(255,255,255,0.14)');
+  } else {
+    style.removeProperty('--taskbar-image');
+    style.removeProperty('--taskbar-image-opacity');
+    style.removeProperty('--taskbar-glass-tint');
+  }
+
+  if (ov.taskbarColor) style.setProperty('--taskbar-bg', ov.taskbarColor);
+  else style.removeProperty('--taskbar-bg');
+
+  if (ov.titlebarColor) style.setProperty('--window-header-bg', ov.titlebarColor);
+  else style.removeProperty('--window-header-bg');
+
+  if (ov.borderColor) style.setProperty('--window-border-color', ov.borderColor);
+  else style.removeProperty('--window-border-color');
+
+  if (ov.startButtonColor) style.setProperty('--start-button-bg', ov.startButtonColor);
+  else style.removeProperty('--start-button-bg');
+
+  if (ov.startIcon) style.setProperty('--start-icon-bg', `url("${ov.startIcon}")`);
+  else style.removeProperty('--start-icon-bg');
+
+  if (ov.trayColor) style.setProperty('--system-tray-bg', ov.trayColor);
+  else style.removeProperty('--system-tray-bg');
+
+  if (ov.iconLabelColor) style.setProperty('--icon-label-color', ov.iconLabelColor);
+  else style.removeProperty('--icon-label-color');
+
+  updatePersonalizePreview(state);
+}
+
+// Per-theme base colors, used both for the Themes-tab live preview and
+// as the Advanced-tab color input fallbacks when no custom override is set.
+const personalizeThemeDefaults = {
+  xp:        { bg: '#3a6ea5', taskbar: '#1450c4', header: '#1148c4', border: '#0831d9', start: '#3fc23f', tray: '#1450c4', iconLabel: '#ffffff' },
+  saya:      { bg: '#0b0000', taskbar: '#1a0000', header: '#3a0000', border: '#7a0000', start: '#3a0000', tray: '#3a0000', iconLabel: '#d64545' },
+  classic98: { bg: '#808080', taskbar: '#c0c0c0', header: '#000080', border: '#808080', start: '#c0c0c0', tray: '#c0c0c0', iconLabel: '#ffffff' }
+};
+
+// Updates the little "monitor" preview box on the Themes tab so it
+// reflects the currently-selected theme + any advanced overrides.
+function updatePersonalizePreview(state) {
+  const preview = document.getElementById('dp-preview');
+  if (!preview) return;
+  const d = personalizeThemeDefaults[state.theme] || personalizeThemeDefaults.xp;
+  const ov = state.overrides;
+  preview.style.setProperty('--dp-preview-bg', d.bg);
+  preview.style.setProperty('--dp-preview-wallpaper', ov.wallpaper ? `url("${ov.wallpaper}")` : 'none');
+  preview.style.setProperty('--dp-preview-taskbar', ov.taskbarColor || d.taskbar);
+  preview.style.setProperty('--dp-preview-header', ov.titlebarColor || d.header);
+  preview.style.setProperty('--dp-preview-border', ov.borderColor || d.border);
+  preview.style.setProperty('--dp-preview-start', ov.startButtonColor || d.start);
+  preview.style.setProperty('--dp-preview-tray', ov.trayColor || d.tray);
+}
+
+// ---- Display Properties window open/close ----
+const personalizeWindowEl = document.getElementById('personalize-window');
+const personalizeBackdropEl = document.getElementById('personalize-backdrop');
+
+function openPersonalizeWindow() {
+  // Start each visit to the dialog from whatever is currently applied.
+  personalizeDraft = JSON.parse(JSON.stringify(personalizeState));
+  syncPersonalizeFormFromDraft();
+  personalizeWindowEl.classList.add('open');
+  personalizeBackdropEl.classList.add('open');
+  // Fixed high z-index (matches the CSS defaults) — this is a modal
+  // dialog with its own backdrop, so it always sits above every
+  // regular app window rather than competing in the shared
+  // zIndexCounter used for focus-ordering between app windows.
+}
+
+function closePersonalizeWindow() {
+  personalizeWindowEl.classList.remove('open');
+  personalizeBackdropEl.classList.remove('open');
+  const iconEl = document.getElementById('personalize-desktop-icon');
+  if (iconEl) iconEl.classList.remove('selected');
+}
+
+personalizeBackdropEl.addEventListener('click', closePersonalizeWindow);
+
+// Pushes personalizeDraft's values into the form controls.
+function syncPersonalizeFormFromDraft() {
+  document.getElementById('dp-theme-select').value = personalizeDraft.theme;
+  const ov = personalizeDraft.overrides;
+  const d = personalizeThemeDefaults[personalizeDraft.theme] || personalizeThemeDefaults.xp;
+  document.getElementById('dp-taskbar-color-input').value = ov.taskbarColor || d.taskbar;
+  document.getElementById('dp-titlebar-color-input').value = ov.titlebarColor || d.header;
+  document.getElementById('dp-border-color-input').value = ov.borderColor || d.border;
+  document.getElementById('dp-startbtn-color-input').value = ov.startButtonColor || d.start;
+  document.getElementById('dp-tray-color-input').value = ov.trayColor || d.tray;
+  document.getElementById('dp-iconlabel-color-input').value = ov.iconLabelColor || d.iconLabel;
+  updatePersonalizePreview(personalizeDraft);
+}
+
+document.getElementById('dp-close-btn').addEventListener('click', closePersonalizeWindow);
+document.getElementById('dp-cancel-btn').addEventListener('click', closePersonalizeWindow);
+
+document.getElementById('dp-apply-btn').addEventListener('click', () => {
+  personalizeState = JSON.parse(JSON.stringify(personalizeDraft));
+  applyPersonalizeState(personalizeState);
+  savePersonalizeState(personalizeState);
+});
+
+document.getElementById('dp-ok-btn').addEventListener('click', () => {
+  personalizeState = JSON.parse(JSON.stringify(personalizeDraft));
+  applyPersonalizeState(personalizeState);
+  savePersonalizeState(personalizeState);
+  closePersonalizeWindow();
+});
+
+// ---- Tabs (Themes / Advanced) ----
+document.querySelectorAll('.dp-tab').forEach(tabEl => {
+  tabEl.addEventListener('click', () => {
+    document.querySelectorAll('.dp-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.dp-panel').forEach(p => p.classList.remove('active'));
+    tabEl.classList.add('active');
+    document.querySelector(`.dp-panel[data-dp-panel="${tabEl.dataset.dpTab}"]`).classList.add('active');
+  });
+});
+
+// ---- Themes tab controls ----
+document.getElementById('dp-theme-select').addEventListener('change', (e) => {
+  personalizeDraft.theme = e.target.value;
+  syncPersonalizeFormFromDraft();
+});
+
+// ---- Advanced tab controls ----
+function readImageFileToDataURL(fileInput, onLoaded) {
+  const file = fileInput.files && fileInput.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => onLoaded(reader.result);
+  reader.readAsDataURL(file);
+}
+
+document.getElementById('dp-wallpaper-input').addEventListener('change', (e) => {
+  readImageFileToDataURL(e.target, (dataUrl) => {
+    personalizeDraft.overrides.wallpaper = dataUrl;
+    updatePersonalizePreview(personalizeDraft);
+  });
+});
+
+document.getElementById('dp-taskbar-image-input').addEventListener('change', (e) => {
+  readImageFileToDataURL(e.target, (dataUrl) => {
+    personalizeDraft.overrides.taskbarImage = dataUrl;
+  });
+});
+
+document.getElementById('dp-taskbar-color-input').addEventListener('input', (e) => {
+  personalizeDraft.overrides.taskbarColor = e.target.value;
+  updatePersonalizePreview(personalizeDraft);
+});
+
+document.getElementById('dp-titlebar-color-input').addEventListener('input', (e) => {
+  personalizeDraft.overrides.titlebarColor = e.target.value;
+  updatePersonalizePreview(personalizeDraft);
+});
+
+document.getElementById('dp-border-color-input').addEventListener('input', (e) => {
+  personalizeDraft.overrides.borderColor = e.target.value;
+  updatePersonalizePreview(personalizeDraft);
+});
+
+document.getElementById('dp-startbtn-color-input').addEventListener('input', (e) => {
+  personalizeDraft.overrides.startButtonColor = e.target.value;
+  updatePersonalizePreview(personalizeDraft);
+});
+
+document.getElementById('dp-start-icon-input').addEventListener('change', (e) => {
+  readImageFileToDataURL(e.target, (dataUrl) => {
+    personalizeDraft.overrides.startIcon = dataUrl;
+  });
+});
+
+document.getElementById('dp-tray-color-input').addEventListener('input', (e) => {
+  personalizeDraft.overrides.trayColor = e.target.value;
+  updatePersonalizePreview(personalizeDraft);
+});
+
+document.getElementById('dp-iconlabel-color-input').addEventListener('input', (e) => {
+  personalizeDraft.overrides.iconLabelColor = e.target.value;
+  updatePersonalizePreview(personalizeDraft);
+});
+
+document.getElementById('dp-reset-advanced').addEventListener('click', () => {
+  personalizeDraft.overrides = defaultPersonalizeState().overrides;
+  document.getElementById('dp-wallpaper-input').value = '';
+  document.getElementById('dp-taskbar-image-input').value = '';
+  document.getElementById('dp-start-icon-input').value = '';
+  syncPersonalizeFormFromDraft();
+});
+
+// ---- Desktop right-click context menu (the Easter egg trigger) ----
+const desktopContextMenu = document.getElementById('desktop-context-menu');
+const desktopEl = document.getElementById('desktop');
+
+function showDesktopContextMenu(x, y) {
+  desktopContextMenu.classList.add('open');
+  // Clamp so the menu never renders off-screen near an edge.
+  const menuRect = desktopContextMenu.getBoundingClientRect();
+  const maxX = window.innerWidth - menuRect.width - 6;
+  const maxY = window.innerHeight - menuRect.height - 6;
+  desktopContextMenu.style.left = Math.min(x, Math.max(0, maxX)) + 'px';
+  desktopContextMenu.style.top = Math.min(y, Math.max(0, maxY)) + 'px';
+}
+
+function hideDesktopContextMenu() {
+  desktopContextMenu.classList.remove('open');
+}
+
+desktopEl.addEventListener('contextmenu', (e) => {
+  if (isMobileMode()) return; // Easter egg is desktop-only
+  // Only trigger on empty desktop space, not on top of an icon or an
+  // open window (those keep their own default/no-op behavior).
+  if (e.target.closest('.desktop-icon') || e.target.closest('.xp-window')) return;
+  e.preventDefault();
+  showDesktopContextMenu(e.clientX, e.clientY);
+});
+
+document.addEventListener('click', (e) => {
+  if (!desktopContextMenu.contains(e.target)) hideDesktopContextMenu();
+});
+window.addEventListener('blur', hideDesktopContextMenu);
+
+document.getElementById('ctx-refresh').addEventListener('click', () => {
+  location.reload();
+});
+
+document.getElementById('ctx-personalize').addEventListener('click', () => {
+  hideDesktopContextMenu();
+  openPersonalizeWindow();
+});
+
+// ---- Apply the saved (or default) theme immediately on page load ----
+applyPersonalizeState(personalizeState);
 
 </script>
 </body>
