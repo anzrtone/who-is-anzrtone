@@ -2709,7 +2709,7 @@ document.querySelectorAll('.dp-tab').forEach(tabEl => {
 // ---- Themes tab controls ----
 document.getElementById('dp-theme-select').addEventListener('change', (e) => {
   personalizeDraft.theme = e.target.value;
-  syncPersonalizeFormFromDraft();
+  resetAdvancedOverrides();
 });
 
 // ---- Advanced tab controls ----
@@ -2770,13 +2770,19 @@ document.getElementById('dp-iconlabel-color-input').addEventListener('input', (e
   updatePersonalizePreview(personalizeDraft);
 });
 
-document.getElementById('dp-reset-advanced').addEventListener('click', () => {
+// Wipes all Advanced-tab overrides back to defaults (file inputs
+// included) and re-syncs the form. Shared by the "Reset custom
+// overrides" button and by picking a new preset theme, since a
+// fresh preset should start clean rather than inherit old tweaks.
+function resetAdvancedOverrides() {
   personalizeDraft.overrides = defaultPersonalizeState().overrides;
   document.getElementById('dp-wallpaper-input').value = '';
   document.getElementById('dp-taskbar-image-input').value = '';
   document.getElementById('dp-start-icon-input').value = '';
   syncPersonalizeFormFromDraft();
-});
+}
+
+document.getElementById('dp-reset-advanced').addEventListener('click', resetAdvancedOverrides);
 
 // ---- Desktop right-click context menu (the Easter egg trigger) ----
 const desktopContextMenu = document.getElementById('desktop-context-menu');
