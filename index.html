@@ -31,7 +31,7 @@
     --taskbar-image-opacity: 0;    /* fades in once an underlay image is set */
     --taskbar-glass-tint: rgba(255,255,255,0); /* frosted-glass tint over the underlay */
     --start-button-bg: linear-gradient(180deg, #6fe06f 0%, #3fc23f 40%, #1e9c1e 60%, #2fb82f 100%);
-    --start-icon-bg: conic-gradient(from 90deg, #f25022 90deg, #7fba00 90deg 180deg, #00a4ef 180deg 270deg, #ffb900 270deg 360deg);
+    --start-icon-bg: url('themes/windows-xp.png');
     --system-tray-bg: linear-gradient(180deg, #1450c4, #0a3aa8);
     --text-color: #1a1a1a;
     --font-family: Tahoma, Verdana, Arial, sans-serif;
@@ -72,6 +72,23 @@
     --icon-label-color: #ffffff;
     --cursor-icon: url('themes/ddlc-cursor.png'), auto;
   }
+
+  body.theme-sora {
+    --bg-wallpaper: url('themes/sora.jpg');
+    --bg-fallback-color: #ffffff;
+    --window-header-bg: #663a3a;
+    --window-border-color: #ffffff;
+    --window-bg: #ffffff;
+    --taskbar-bg: #ffffff;
+    --start-button-bg: #000000;
+    --start-icon-bg: url('themes/sora-icon.png');
+    --system-tray-bg: #000000;
+    --text-color: #ffffff;
+    --font-family: 'MS Sans Serif', Tahoma, Verdana, sans-serif;
+    --icon-label-color: #ffffff;
+    --cursor-icon: url('themes/sora-cursor.png'), auto;
+}
+  
 
   html, body {
     margin: 0;
@@ -1425,6 +1442,7 @@
             <option value="xp">Luna (Windows XP)</option>
             <option value="saya">Saya</option>
             <option value="natsuki">Natsuki</option>
+            <option value ="sora">Sora</option>
           </select>
         </div>
         <div class="dp-hint">Choose a color scheme. Click Apply to preview it, or OK to apply and close.</div>
@@ -2580,7 +2598,7 @@ setInterval(updateClock, 1000 * 10);
    ===================================================================== */
 
 const PERSONALIZE_STORAGE_KEY = 'personalize-settings';
-const PERSONALIZE_THEMES = ['xp', 'saya', 'natsuki'];
+const PERSONALIZE_THEMES = ['xp', 'saya', 'natsuki','sora'];
 
 function defaultPersonalizeState() {
   return {
@@ -2685,7 +2703,8 @@ function applyPersonalizeState(state) {
 const personalizeThemeDefaults = {
   xp:        { bg: '#3a6ea5', taskbar: '#1450c4', header: '#1148c4', border: '#0831d9', start: '#3fc23f', tray: '#1450c4', iconLabel: '#ffffff' },
   saya:      { bg: '#0b0000', taskbar: '#1a0000', header: '#3a0000', border: '#7a0000', start: '#3a0000', tray: '#3a0000', iconLabel: '#d64545' },
-  natsuki: { bg: '#FFF0F5', taskbar: '#FAD2E1', header: '#E85285', border: '#D81B60', start: '#FF85A1', tray: '#FF85A1', iconLabel: '#3D0C1E' }
+  natsuki: { bg: '#FFF0F5', taskbar: '#FAD2E1', header: '#E85285', border: '#D81B60', start: '#FF85A1', tray: '#FF85A1', iconLabel: '#3D0C1E' },
+  sora: {bg: '#ffffff', taskbar: '#ffffff', header: '#663a3a', border: '#ffffff', start: '#000000', tray: '#000000', iconLabel: '#ffffff'}
 };
 
 // Reads a theme's own --bg-wallpaper straight off the CSS rule that defines
